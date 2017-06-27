@@ -1,0 +1,12 @@
+.RichEditorStyleButton {
+    color: #999;
+    cursor: pointer;
+    margin-right: 16px;
+    padding: 2px 0;
+    display: inline-block;
+}
+
+.RichEditorActiveButton {
+    color: #5890ff;
+    font-weight: bold;
+}

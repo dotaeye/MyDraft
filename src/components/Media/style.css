@@ -1,0 +1,39 @@
+.mediaContainer {
+    user-select: none;
+    background-color: #fff;
+    border-radius: 3px;
+    border: solid 1px #ddd;
+    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
+}
+
+.mediaContent {
+    background-color: #eee;
+    line-height: 100px;
+    text-align: center;
+    position: relative;
+}
+
+.mediaImage {
+    display: inline-block;
+    max-width: 100%;
+    vertical-align: middle;
+}
+
+.mediaRemove {
+    top: 0;
+    right: 0;
+    position: absolute;
+    width: 30px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    cursor: pointer;
+    color: #fff;
+    background: #999;
+}
+
+.mediaData {
+    padding: 12px;
+    padding-top: 6px;
+    background-color: #fff;
+}
