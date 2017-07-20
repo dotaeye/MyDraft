@@ -1,13 +1,17 @@
-import React, { Component } from "react";
-import classNames from "classnames";
-import styles from "./style.less";
+import React, { Component } from 'react';
+import classNames from 'classnames';
+import styles from './style.less';
 
 export default class Input extends Component {
   renderError(error) {
     if (!error) {
       return;
     }
-    return <div className={styles.inputError}>{error}</div>;
+    return (
+      <div className={styles.inputError}>
+        {error}
+      </div>
+    );
   }
 
   _handleDrop(event) {

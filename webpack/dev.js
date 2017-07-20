@@ -7,7 +7,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const HtmlWebpackHarddiskPlugin = require("html-webpack-harddisk-plugin");
 const webpackDevServer = require("webpack-dev-server");
 
-const port = 4002;
+const port = 4003;
 
 const loaders = [
   {

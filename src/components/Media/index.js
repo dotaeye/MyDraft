@@ -1,7 +1,7 @@
-import React, { Component } from "react";
-import { EditorState, SelectionState, Modifier } from "draft-js";
-import Input from "../Input";
-import styles from "./style.css";
+import React, { Component } from 'react';
+import { EditorState, SelectionState, Modifier } from 'draft-js';
+import Input from '../Input';
+import styles from './style.css';
 
 export default class Media extends Component {
   constructor(props) {
@@ -22,7 +22,7 @@ export default class Media extends Component {
     const newState = EditorState.push(
       editorState,
       withoutAtomicBlock,
-      "remove-range"
+      'remove-range'
     );
     const newSelection = new SelectionState({
       anchorKey: keyAfter,
@@ -76,7 +76,9 @@ export default class Media extends Component {
       >
         <div className={styles.mediaContent}>
           <img src={data.src} alt="" className={styles.mediaImage} />
-          <div className={styles.mediaRemove} onClick={this.remove}>X</div>
+          <div className={styles.mediaRemove} onClick={this.remove}>
+            X
+          </div>
         </div>
         <div className={styles.mediaData}>
           <Input

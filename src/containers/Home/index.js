@@ -1,32 +1,32 @@
-import React from "react";
-import ReactDOM from "react-dom";
+import React from 'react';
+import ReactDOM from 'react-dom';
 import {
   EditorState,
   RichUtils,
   AtomicBlockUtils,
   convertToRaw,
   convertFromRaw
-} from "draft-js";
-import DraftOffsetKey from "draft-js/lib/DraftOffsetKey";
-import Editor from "draft-js-plugins-editor"; // eslint-disable-line import/no-unresolved
+} from 'draft-js';
+import DraftOffsetKey from 'draft-js/lib/DraftOffsetKey';
+import Editor from 'draft-js-plugins-editor'; // eslint-disable-line import/no-unresolved
 import createMentionPlugin, {
   defaultSuggestionsFilter
-} from "draft-js-mention-plugin"; // eslint-disable-line import/no-unresolved
-import Style from "fbjs/lib/Style";
-import getElementPosition from "fbjs/lib/getElementPosition";
-import getScrollPosition from "fbjs/lib/getScrollPosition";
-import BlockStyleControls from "../../components/Block";
-import InlineStyleControls from "../../components/Inline";
-import { getParams } from "../../utils";
-import Media from "../../components/Media";
-import "draft-js/dist/Draft.css";
-import "draft-js-mention-plugin/lib/plugin.css";
-import mentions from "./mentions";
-import editorStyles from "./home.less";
+} from 'draft-js-mention-plugin'; // eslint-disable-line import/no-unresolved
+import Style from 'fbjs/lib/Style';
+import getElementPosition from 'fbjs/lib/getElementPosition';
+import getScrollPosition from 'fbjs/lib/getScrollPosition';
+import BlockStyleControls from '../../components/Block';
+import InlineStyleControls from '../../components/Inline';
+import { getParams } from '../../utils';
+import Media from '../../components/Media';
+import 'draft-js/dist/Draft.css';
+import 'draft-js-mention-plugin/lib/plugin.css';
+import mentions from './mentions';
+import editorStyles from './home.less';
 
 const mentionPlugin = createMentionPlugin({
-  mentionPrefix: "user:",
-  mentionTrigger: "U"
+  mentionPrefix: 'user:',
+  mentionTrigger: 'U'
 });
 const { MentionSuggestions } = mentionPlugin;
 
@@ -34,7 +34,7 @@ const plugins = [mentionPlugin];
 
 const styleMap = {
   CODE: {
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
     fontFamily: '"Inconsolata", "Menlo", "Consolas", monospace',
     fontSize: 16,
     padding: 2
@@ -43,9 +43,9 @@ const styleMap = {
 
 function getBlockStyle(block) {
   switch (block.getType()) {
-    case "blockquote":
+    case 'blockquote':
       return editorStyles.RichEditorBlockquote;
-    case "atomic":
+    case 'atomic':
       return editorStyles.RichEditorImage;
     default:
       return null;
@@ -62,14 +62,20 @@ const Entry = props => {
   console.log(props);
   return (
     <div {...parentProps}>
-      <div>{mention.get("title")}</div>
+      <div>
+        {mention.get('title')}
+      </div>
     </div>
   );
 };
 
 const PopOver = props => {
   console.log(props);
-  return <div>{props.children}</div>;
+  return (
+    <div>
+      {props.children}
+    </div>
+  );
 };
 
 class Home extends React.Component {
@@ -81,33 +87,13 @@ class Home extends React.Component {
 
   componentDidMount() {
     window.onWebViewBridgeMessage = this.onMessage.bind(this);
-    // window.document.addEventListener("scroll", this.onScroll.bind(this));
-    // window.document.addEventListener("message", this.onMessage.bind(this));
-  }
-
-  componentWillUnmount() {
-    // window.document.removeEventListener("scroll");
-  }
-
-  onScroll() {
-    var offsetY = window.document.body.scrollTop;
-    var footer = document.getElementById("editor_footer");
-    var maxOffsetY =
-      footer.offsetTop +
-      footer.offsetHeight -
-      document.documentElement.clientHeight;
-    console.log("maxOffsetY", maxOffsetY);
-    if (maxOffsetY < 0) maxOffsetY = 0;
-    if (offsetY > maxOffsetY) {
-      window.scrollTo(0, maxOffsetY);
-    }
   }
 
   onMessage(message) {
     // const message = event.data;
     const action = JSON.parse(message);
     // 文档编辑命令
-    if (action.type === "DOCUMENT_COMMAND") {
+    if (action.type === 'DOCUMENT_COMMAND') {
       if (action.block) {
         this.onChange(
           RichUtils.toggleBlockType(this.state.editorState, action.command)
@@ -118,13 +104,15 @@ class Home extends React.Component {
         );
       }
       // 初始化
-    } else if (action.type === "SET_EDITOR_HEIGHT") {
+    } else if (action.type === 'SET_EDITOR_HEIGHT') {
       this.editorHeight = action.editorHeight;
-      // this.getSelectionYPosition(this.state.editorState, action.editorHeight);
+    } else if (action.type === 'INSERT_IMAGE') {
+      this.onAddImage(action.data);
     }
   }
 
   onChange = editorState => {
+    const { readOnly } = this.state;
     const selection = editorState.getSelection();
     const blockType = editorState
       .getCurrentContent()
@@ -134,9 +122,12 @@ class Home extends React.Component {
     const message = {
       block: blockType,
       style: currentStyle,
-      type: "SET_TOOLBAR_STATE"
+      type: 'SET_TOOLBAR_STATE'
     };
     this.postMessage(message);
+    this.postMessage({
+      type: selection.getHasFocus() ? 'SHOW_TOOLBAR' : 'HIDE_TOOLBAR'
+    });
 
     this.setState(
       {
@@ -160,21 +151,20 @@ class Home extends React.Component {
     // get the mention object selected
   };
 
-  onAddImage = e => {
-    e.preventDefault();
+  onAddImage = src => {
     const { editorState } = this.state;
     const contentState = editorState.getCurrentContent();
     const contentStateWithEntity = contentState.createEntity(
-      "image",
-      "IMMUTABLE",
-      { src: "http://megadraft.io/images/media.jpg" }
+      'image',
+      'IMMUTABLE',
+      { src }
     );
     const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
     const newEditorState = EditorState.set(editorState, {
       currentContent: contentStateWithEntity
     });
     this.onChange(
-      AtomicBlockUtils.insertAtomicBlock(newEditorState, entityKey, " ")
+      AtomicBlockUtils.insertAtomicBlock(newEditorState, entityKey, ' ')
     );
   };
 
@@ -190,32 +180,44 @@ class Home extends React.Component {
     this.onChange(EditorState.createWithContent(contentState));
   };
 
+  onEditorClick(event) {
+    this.editor.focus();
+  }
+
+  getSelectedBlockElement() {
+    // Finds the block parent of the current selection
+    // https://github.com/facebook/draft-js/issues/45
+    const selection = window.getSelection();
+    if (selection.rangeCount === 0) {
+      return null;
+    }
+    let node = selection.getRangeAt(0).startContainer;
+
+    do {
+      if (node.getAttribute && node.getAttribute('data-block') == 'true') {
+        return node;
+      }
+      node = node.parentNode;
+    } while (node != null);
+  }
+
   syncScrollPosition() {
     const { editorState } = this.state;
     const selection = editorState.getSelection();
-    if (!selection.getHasFocus()) {
-      return;
-    }
-    const currentContent = editorState.getCurrentContent();
-    const currentBlock = currentContent.getBlockForKey(selection.getStartKey());
-    const offsetKey = DraftOffsetKey.encode(currentBlock.getKey(), 0, 0);
-    const selector = `[data-offset-key="${offsetKey}"]`;
-    const nodes = document.querySelectorAll(selector);
-
-    if (nodes && nodes.length > 0) {
-      const node = document.querySelectorAll(selector)[0];
+    const node = this.getSelectedBlockElement();
+    if (node) {
       const scrollParent = Style.getScrollParent(node);
       const scrollPosition = getScrollPosition(scrollParent);
       const nodePosition = getElementPosition(node);
       const nodeBottom = nodePosition.y + nodePosition.height;
       const viewportHeight = document.documentElement.clientHeight;
       const scrollDelta = nodeBottom - viewportHeight;
-      const position = scrollPosition.y + scrollDelta + 10;
+      const position = scrollPosition.y + scrollDelta + 50;
       if (scrollDelta > 0) {
         window.scrollTo(0, position);
         // console.log("position", position);
         const message = {
-          type: "SYNC_SCROLL_POSITION",
+          type: 'SYNC_SCROLL_POSITION',
           position
         };
         this.postMessage(message);
@@ -249,7 +251,7 @@ class Home extends React.Component {
   };
 
   mediaBlockRenderer = block => {
-    if (block.getType() !== "atomic") {
+    if (block.getType() !== 'atomic') {
       return null;
     }
     return {
@@ -271,26 +273,22 @@ class Home extends React.Component {
     let className = editorStyles.RichEditor;
     var contentState = editorState.getCurrentContent();
     if (!contentState.hasText()) {
-      if (contentState.getBlockMap().first().getType() !== "unstyled") {
+      if (contentState.getBlockMap().first().getType() !== 'unstyled') {
         className += ` ${editorStyles.RichEditorHidePlaceholder}`;
       }
     }
 
     return (
       <div className={editorStyles.RichEditorRoot}>
-        <button type="button" onClick={this.onAddImage}>插入图片</button>
-        <button type="button" onClick={this.onGetState}>获取文本状态</button>
-        <button type="button" onClick={this.onInitFromJson}>从JSON初始化文本</button>
-        <div className={className}>
+        <div className={className} onClick={this.onEditorClick.bind(this)}>
           <Editor
             blockStyleFn={getBlockStyle}
             blockRendererFn={this.mediaBlockRenderer}
-            customStyleMap={styleMap}
             editorState={editorState}
             onChange={this.onChange}
             plugins={plugins}
             readOnly={readOnly}
-            placeholder="Tell a story..."
+            placeholder="写点什么..."
             ref={element => {
               this.editor = element;
             }}
@@ -308,37 +306,37 @@ class Home extends React.Component {
 
 const defaultJSON = {
   entityMap: {
-    "0": {
-      type: "image",
-      mutability: "IMMUTABLE",
+    '0': {
+      type: 'image',
+      mutability: 'IMMUTABLE',
       data: {
-        src: "http://megadraft.io/images/media.jpg"
+        src: 'http://megadraft.io/images/media.jpg'
       }
     }
   },
   blocks: [
     {
-      key: "cbpvd",
-      text: "asdfasdfsaf",
-      type: "unstyled",
+      key: 'cbpvd',
+      text: 'asdfasdfsaf',
+      type: 'unstyled',
       depth: 0,
       inlineStyleRanges: [],
       entityRanges: [],
       data: {}
     },
     {
-      key: "f9ti4",
-      text: "asdfasdf",
-      type: "unstyled",
+      key: 'f9ti4',
+      text: 'asdfasdf',
+      type: 'unstyled',
       depth: 0,
       inlineStyleRanges: [],
       entityRanges: [],
       data: {}
     },
     {
-      key: "9oc8",
-      text: " ",
-      type: "atomic",
+      key: '9oc8',
+      text: ' ',
+      type: 'atomic',
       depth: 0,
       inlineStyleRanges: [],
       entityRanges: [
@@ -349,13 +347,13 @@ const defaultJSON = {
         }
       ],
       data: {
-        desc: "asdasfasdad"
+        desc: 'asdasfasdad'
       }
     },
     {
-      key: "1bqu3",
-      text: "",
-      type: "unstyled",
+      key: '1bqu3',
+      text: '',
+      type: 'unstyled',
       depth: 0,
       inlineStyleRanges: [],
       entityRanges: [],
