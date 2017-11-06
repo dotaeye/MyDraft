@@ -9,28 +9,14 @@ import {
 } from 'draft-js';
 import DraftOffsetKey from 'draft-js/lib/DraftOffsetKey';
 import Editor from 'draft-js-plugins-editor'; // eslint-disable-line import/no-unresolved
-import createMentionPlugin, {
-  defaultSuggestionsFilter
-} from 'draft-js-mention-plugin'; // eslint-disable-line import/no-unresolved
+import { stateToHTML } from 'draft-js-export-html';
 import Style from 'fbjs/lib/Style';
 import getElementPosition from 'fbjs/lib/getElementPosition';
 import getScrollPosition from 'fbjs/lib/getScrollPosition';
-import BlockStyleControls from '../../components/Block';
-import InlineStyleControls from '../../components/Inline';
+import 'draft-js/dist/Draft.css';
 import { getParams } from '../../utils';
 import Media from '../../components/Media';
-import 'draft-js/dist/Draft.css';
-import 'draft-js-mention-plugin/lib/plugin.css';
-import mentions from './mentions';
 import editorStyles from './home.less';
-
-const mentionPlugin = createMentionPlugin({
-  mentionPrefix: 'user:',
-  mentionTrigger: 'U'
-});
-const { MentionSuggestions } = mentionPlugin;
-
-const plugins = [mentionPlugin];
 
 const styleMap = {
   CODE: {
@@ -47,41 +33,16 @@ function getBlockStyle(block) {
       return editorStyles.RichEditorBlockquote;
     case 'atomic':
       return editorStyles.RichEditorImage;
+    case 'unstyled':
+      return editorStyles.RichEditorUnStyle;
     default:
       return null;
   }
 }
 
-const Entry = props => {
-  const {
-    mention,
-    theme,
-    searchValue, // eslint-disable-line no-unused-vars
-    ...parentProps
-  } = props;
-  console.log(props);
-  return (
-    <div {...parentProps}>
-      <div>
-        {mention.get('title')}
-      </div>
-    </div>
-  );
-};
-
-const PopOver = props => {
-  console.log(props);
-  return (
-    <div>
-      {props.children}
-    </div>
-  );
-};
-
 class Home extends React.Component {
   state = {
     editorState: EditorState.createEmpty(),
-    suggestions: mentions,
     readOnly: false
   };
 
@@ -108,6 +69,11 @@ class Home extends React.Component {
       this.editorHeight = action.editorHeight;
     } else if (action.type === 'INSERT_IMAGE') {
       this.onAddImage(action.data);
+    } else if (action.type === 'GET_CONTENT') {
+      this.postMessage({
+        type: 'GET_CONTENT',
+        content: stateToHTML(this.getContent())
+      });
     }
   }
 
@@ -141,16 +107,6 @@ class Home extends React.Component {
     );
   };
 
-  onSearchChange = ({ value }) => {
-    this.setState({
-      suggestions: defaultSuggestionsFilter(value, mentions)
-    });
-  };
-
-  onAddMention = () => {
-    // get the mention object selected
-  };
-
   onAddImage = src => {
     const { editorState } = this.state;
     const contentState = editorState.getCurrentContent();
@@ -168,10 +124,9 @@ class Home extends React.Component {
     );
   };
 
-  onGetState = () => {
+  getContent = () => {
     if (this.state.editorState) {
-      const content = this.state.editorState.getCurrentContent();
-      console.log(JSON.stringify(convertToRaw(content), null, 2));
+      return this.state.editorState.getCurrentContent();
     }
   };
 
@@ -192,7 +147,6 @@ class Home extends React.Component {
       return null;
     }
     let node = selection.getRangeAt(0).startContainer;
-
     do {
       if (node.getAttribute && node.getAttribute('data-block') == 'true') {
         return node;
@@ -234,16 +188,6 @@ class Home extends React.Component {
     }
   }
 
-  toggleBlockType = blockType => {
-    this.onChange(RichUtils.toggleBlockType(this.state.editorState, blockType));
-  };
-
-  toggleInlineStyle = inlineStyle => {
-    this.onChange(
-      RichUtils.toggleInlineStyle(this.state.editorState, inlineStyle)
-    );
-  };
-
   setReadOnly = readOnly => {
     this.setState({
       readOnly
@@ -273,7 +217,12 @@ class Home extends React.Component {
     let className = editorStyles.RichEditor;
     var contentState = editorState.getCurrentContent();
     if (!contentState.hasText()) {
-      if (contentState.getBlockMap().first().getType() !== 'unstyled') {
+      if (
+        contentState
+          .getBlockMap()
+          .first()
+          .getType() !== 'unstyled'
+      ) {
         className += ` ${editorStyles.RichEditorHidePlaceholder}`;
       }
     }
@@ -286,16 +235,11 @@ class Home extends React.Component {
             blockRendererFn={this.mediaBlockRenderer}
             editorState={editorState}
             onChange={this.onChange}
-            plugins={plugins}
             readOnly={readOnly}
             placeholder="写点什么..."
             ref={element => {
               this.editor = element;
             }}
-          />
-          <MentionSuggestions
-            onSearchChange={this.onSearchChange}
-            suggestions={this.state.suggestions}
           />
         </div>
         <div id="editor_footer" />

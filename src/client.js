@@ -1,7 +1,7 @@
 import "babel-polyfill";
 import React from "react";
 import ReactDOM from "react-dom";
-import App from "./containers/App";
+import Home from "./containers/Home";
 
 // import { Router, browserHistory } from "react-router";
 // import createRoutes from "./routes";
@@ -11,4 +11,4 @@ import App from "./containers/App";
 //   document.getElementById("main")
 // );
 
-ReactDOM.render(<App />, document.getElementById("main"));
+ReactDOM.render(<Home />, document.getElementById("main"));

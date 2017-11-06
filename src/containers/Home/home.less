@@ -1,28 +1,41 @@
+* {
+  outline: 0px solid transparent;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  -webkit-touch-callout: none;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1em;
+  color: #2d4150;
+}
+
+body {
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 5px;
+  padding-bottom: 0px;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+  height: 100%;
+}
+
 .RichEditorRoot {
   background: #fff;
-  font-family: 'Georgia', serif;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .RichEditor {
   cursor: text;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .RichEditor :global {
   .public-DraftEditor-content {
     min-height: 240px;
-  }
-  .public-DraftStyleDefault-block {
-    line-height: 24px;
-    min-height: 24px;
-    margin-bottom: 15px;
-  }
-  .public-DraftStyleDefault-pre {
-    background-color: rgba(0, 0, 0, 0.05);
-    font-family: 'Inconsolata', 'Menlo', 'Consolas', monospace;
-    font-size: 16px;
-    padding: 20px;
   }
 }
 
@@ -42,4 +55,10 @@
 .RichEditorImage {
   padding: 0;
   margin: 0;
+}
+
+.RichEditorUnStyle {
+  line-height: 24px;
+  min-height: 24px;
+  margin-bottom: 15px;
 }

@@ -13,6 +13,7 @@
     "classnames": "^2.2.5",
     "compression": "^1.6.2",
     "draft-js": "^0.10.1",
+    "draft-js-export-html": "^1.2.0",
     "draft-js-mention-plugin": "^2.0.0-rc2",
     "draft-js-plugins-editor": "^2.0.0-rc2",
     "express": "^4.14.0",
