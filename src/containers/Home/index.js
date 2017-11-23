@@ -5,7 +5,8 @@ import {
   RichUtils,
   AtomicBlockUtils,
   convertToRaw,
-  convertFromRaw
+  convertFromRaw,
+  Entity
 } from 'draft-js';
 import DraftOffsetKey from 'draft-js/lib/DraftOffsetKey';
 import Editor from 'draft-js-plugins-editor'; // eslint-disable-line import/no-unresolved
@@ -24,6 +25,23 @@ const styleMap = {
     fontFamily: '"Inconsolata", "Menlo", "Consolas", monospace',
     fontSize: 16,
     padding: 2
+  }
+};
+
+const options = {
+  blockRenderers: {
+    atomic: block => {
+      let data = block.getData();
+      let imgSrc;
+      block.findEntityRanges(ch => {
+        const entityKey = ch.getEntity();
+        if (entityKey != null) {
+          imgSrc = Entity.get(entityKey).getData().src;
+        }
+      });
+      return `<div class="image-box"><img src="${imgSrc}" />
+        <div class="image-box-title">${data.get('desc')}</div></div>`;
+    }
   }
 };
 
@@ -48,6 +66,10 @@ class Home extends React.Component {
 
   componentDidMount() {
     window.onWebViewBridgeMessage = this.onMessage.bind(this);
+    this.onInitFromJson();
+    setTimeout(() => {
+      console.log(stateToHTML(this.getContent(), options));
+    }, 2000);
   }
 
   onMessage(message) {
