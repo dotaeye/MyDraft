@@ -66,10 +66,10 @@ class Home extends React.Component {
 
   componentDidMount() {
     window.onWebViewBridgeMessage = this.onMessage.bind(this);
-    this.onInitFromJson();
-    setTimeout(() => {
-      console.log(stateToHTML(this.getContent(), options));
-    }, 2000);
+    // this.onInitFromJson();
+    // setTimeout(() => {
+    //   console.log(JSON.stringify(convertToRaw(this.getContent())));
+    // }, 2000);
   }
 
   onMessage(message) {
@@ -94,7 +94,8 @@ class Home extends React.Component {
     } else if (action.type === 'GET_CONTENT') {
       this.postMessage({
         type: 'GET_CONTENT',
-        content: stateToHTML(this.getContent())
+        content: stateToHTML(this.getContent()),
+        json: JSON.stringify(convertToRaw(this.getContent()))
       });
     }
   }
