@@ -1,13 +1,18 @@
-import React, { Component } from 'react';
-import { EditorState, SelectionState, Modifier } from 'draft-js';
-import Input from '../Input';
-import styles from './style.css';
+import React, { Component } from "react";
+import { EditorState, SelectionState, Modifier } from "draft-js";
+import Input from "../Input";
+import styles from "./style.css";
 
 export default class Media extends Component {
   constructor(props) {
     super(props);
     this.onChange = this.props.blockProps.onChange;
   }
+
+  onDescChange = event => {
+    event.stopPropagation();
+    this.updateData({ desc: event.target.value });
+  };
 
   remove = () => {
     const { editorState } = this.props.blockProps;
@@ -22,7 +27,7 @@ export default class Media extends Component {
     const newState = EditorState.push(
       editorState,
       withoutAtomicBlock,
-      'remove-range'
+      "remove-range"
     );
     const newSelection = new SelectionState({
       anchorKey: keyAfter,
@@ -45,25 +50,20 @@ export default class Media extends Component {
     });
 
     const newContentState = Modifier.mergeBlockData(content, selection, data);
-    const newEditorState = EditorState.push(editorState, newContentState);
+    const newEditorState = EditorState.push(
+      editorState,
+      newContentState,
+      "change-block-data"
+    );
 
     this.onChange(newEditorState);
-  };
-
-  onDescChange = event => {
-    event.stopPropagation();
-    this.updateData({ desc: event.target.value });
   };
 
   render() {
     // Should we use immutables?
     const { block, contentState } = this.props;
     const { setReadOnly } = this.props.blockProps;
-    const entityData = contentState.getEntity(block.getEntityAt(0)).getData();
-    const data = {
-      ...entityData,
-      ...block.getData().toObject()
-    };
+    const data = block.getData().toJS();
     return (
       <div
         className={styles.mediaContainer}

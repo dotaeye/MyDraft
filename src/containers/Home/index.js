@@ -1,49 +1,23 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import uuidv4 from "uuid/v4";
 import {
   EditorState,
   RichUtils,
   AtomicBlockUtils,
   convertToRaw,
   convertFromRaw,
-  Entity
+  Entity,
+  Editor
 } from 'draft-js';
-import DraftOffsetKey from 'draft-js/lib/DraftOffsetKey';
-import Editor from 'draft-js-plugins-editor'; // eslint-disable-line import/no-unresolved
-import { stateToHTML } from 'draft-js-export-html';
 import Style from 'fbjs/lib/Style';
 import getElementPosition from 'fbjs/lib/getElementPosition';
 import getScrollPosition from 'fbjs/lib/getScrollPosition';
 import 'draft-js/dist/Draft.css';
 import { getParams } from '../../utils';
+import insertDataBlock from '../../utils/insertDataBlock';
 import Media from '../../components/Media';
 import editorStyles from './home.less';
-
-const styleMap = {
-  CODE: {
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    fontFamily: '"Inconsolata", "Menlo", "Consolas", monospace',
-    fontSize: 16,
-    padding: 2
-  }
-};
-
-const options = {
-  blockRenderers: {
-    atomic: block => {
-      let data = block.getData();
-      let imgSrc;
-      block.findEntityRanges(ch => {
-        const entityKey = ch.getEntity();
-        if (entityKey != null) {
-          imgSrc = Entity.get(entityKey).getData().src;
-        }
-      });
-      return `<div class="image-box"><img src="${imgSrc}" />
-        <div class="image-box-title">${data.get('desc')}</div></div>`;
-    }
-  }
-};
 
 function getBlockStyle(block) {
   switch (block.getType()) {
@@ -66,10 +40,9 @@ class Home extends React.Component {
 
   componentDidMount() {
     window.onWebViewBridgeMessage = this.onMessage.bind(this);
-    // this.onInitFromJson();
-    // setTimeout(() => {
-    //   console.log(JSON.stringify(convertToRaw(this.getContent())));
-    // }, 2000);
+    if (window.initialRowJson) {
+      this.onInitFromJson(window.initialRowJson);
+    }
   }
 
   onMessage(message) {
@@ -87,16 +60,17 @@ class Home extends React.Component {
         );
       }
       // 初始化
-    } else if (action.type === 'SET_EDITOR_HEIGHT') {
-      this.editorHeight = action.editorHeight;
     } else if (action.type === 'INSERT_IMAGE') {
       this.onAddImage(action.data);
     } else if (action.type === 'GET_CONTENT') {
       this.postMessage({
         type: 'GET_CONTENT',
-        content: stateToHTML(this.getContent()),
-        json: JSON.stringify(convertToRaw(this.getContent()))
+        value: this.getValue()
       });
+    } else if (action.type === 'INITIAL_EDITOR') {
+      this.onInitFromJson(action.data);
+    } else if (action.type === 'HIDE_KEYBOARD') {
+      this.editor.blur();
     }
   }
 
@@ -131,31 +105,56 @@ class Home extends React.Component {
   };
 
   onAddImage = src => {
-    const { editorState } = this.state;
-    const contentState = editorState.getCurrentContent();
-    const contentStateWithEntity = contentState.createEntity(
-      'image',
-      'IMMUTABLE',
-      { src }
-    );
-    const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
-    const newEditorState = EditorState.set(editorState, {
-      currentContent: contentStateWithEntity
-    });
-    this.onChange(
-      AtomicBlockUtils.insertAtomicBlock(newEditorState, entityKey, ' ')
-    );
+    const data = {
+      src,
+      type: 'image'
+    };
+    this.onChange(insertDataBlock(this.state.editorState, data));
   };
 
   getContent = () => {
-    if (this.state.editorState) {
-      return this.state.editorState.getCurrentContent();
-    }
+    return this.state.editorState.getCurrentContent();
   };
 
-  onInitFromJson = () => {
+  getDescription = () => {
+    return this.getContent().getPlainText();
+  };
+
+  getValue = () => {
+    const rowContentState = convertToRaw(this.getContent());
+    const result = {
+      imagesList: []
+    };
+    rowContentState.blocks.filter(x => x.type === 'atomic').forEach(b => {
+      const id = uuidv4();
+      result.imagesList.push({
+        id,
+        url: b.data.src
+      });
+      b.data.src = id;
+    });
+    result.json = JSON.stringify(rowContentState);
+    result.description = this.getDescription();
+    return result;
+  };
+
+  onInitFromJson = defaultJSON => {
     const contentState = convertFromRaw(defaultJSON);
     this.onChange(EditorState.createWithContent(contentState));
+  };
+
+  hasText = () => {
+    return this.getContent().hasText();
+  };
+
+  handleKeyCommand = command => {
+    const { editorState } = this.state;
+    const newState = RichUtils.handleKeyCommand(editorState, command);
+    if (newState) {
+      this.onChange(newState);
+      return true;
+    }
+    return false;
   };
 
   onEditorClick(event) {
@@ -192,12 +191,6 @@ class Home extends React.Component {
       const position = scrollPosition.y + scrollDelta + 50;
       if (scrollDelta > 0) {
         window.scrollTo(0, position);
-        // console.log("position", position);
-        const message = {
-          type: 'SYNC_SCROLL_POSITION',
-          position
-        };
-        this.postMessage(message);
       }
     }
   }
@@ -205,9 +198,6 @@ class Home extends React.Component {
   postMessage(message) {
     if (window.ENV_RN) {
       WebViewBridge.send(JSON.stringify(message));
-      // window.postMessage(JSON.stringify(message));
-    } else {
-      console.log(JSON.stringify(message));
     }
   }
 
@@ -259,7 +249,8 @@ class Home extends React.Component {
             editorState={editorState}
             onChange={this.onChange}
             readOnly={readOnly}
-            placeholder="写点什么..."
+            handleKeyCommand={this.handleKeyCommand}
+            placeholder={this.props.placehodler || '写点什么...'}
             ref={element => {
               this.editor = element;
             }}
@@ -270,63 +261,5 @@ class Home extends React.Component {
     );
   }
 }
-
-const defaultJSON = {
-  entityMap: {
-    '0': {
-      type: 'image',
-      mutability: 'IMMUTABLE',
-      data: {
-        src: 'http://megadraft.io/images/media.jpg'
-      }
-    }
-  },
-  blocks: [
-    {
-      key: 'cbpvd',
-      text: 'asdfasdfsaf',
-      type: 'unstyled',
-      depth: 0,
-      inlineStyleRanges: [],
-      entityRanges: [],
-      data: {}
-    },
-    {
-      key: 'f9ti4',
-      text: 'asdfasdf',
-      type: 'unstyled',
-      depth: 0,
-      inlineStyleRanges: [],
-      entityRanges: [],
-      data: {}
-    },
-    {
-      key: '9oc8',
-      text: ' ',
-      type: 'atomic',
-      depth: 0,
-      inlineStyleRanges: [],
-      entityRanges: [
-        {
-          offset: 0,
-          length: 1,
-          key: 0
-        }
-      ],
-      data: {
-        desc: 'asdasfasdad'
-      }
-    },
-    {
-      key: '1bqu3',
-      text: '',
-      type: 'unstyled',
-      depth: 0,
-      inlineStyleRanges: [],
-      entityRanges: [],
-      data: {}
-    }
-  ]
-};
 
 export default Home;
