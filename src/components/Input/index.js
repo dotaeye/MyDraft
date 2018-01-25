@@ -33,6 +33,7 @@ export default class Input extends Component {
         <input
           {...props}
           value={value}
+          maxLength={15}
           type="text"
           className={className}
           onDrop={this._handleDrop}

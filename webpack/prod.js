@@ -70,7 +70,7 @@ const webpackConfig = {
 
   postcss: [autoprefixer()],
   plugins: [
-    new CleanWebpackPlugin(["index.html", "assets"], {
+    new CleanWebpackPlugin(["assets"], {
       root: path.join(__dirname, "../public/"),
       verbose: true,
       dry: false

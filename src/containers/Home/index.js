@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import uuidv4 from "uuid/v4";
+import uuidv4 from 'uuid/v4';
 import {
   EditorState,
   RichUtils,
@@ -35,11 +35,16 @@ function getBlockStyle(block) {
 class Home extends React.Component {
   state = {
     editorState: EditorState.createEmpty(),
-    readOnly: false
+    readOnly: false,
+    showTitle: window.showTitle,
+    titleValue: window.titleValue,
+    placehodler: window.contentPlacehodler,
+    titlePlacehodler: window.titlePlacehodler
   };
 
   componentDidMount() {
     window.onWebViewBridgeMessage = this.onMessage.bind(this);
+    this.titleValue = window.titleValue;
     if (window.initialRowJson) {
       this.onInitFromJson(window.initialRowJson);
     }
@@ -135,6 +140,7 @@ class Home extends React.Component {
     });
     result.json = JSON.stringify(rowContentState);
     result.description = this.getDescription();
+    result.title = this.titleValue;
     return result;
   };
 
@@ -160,6 +166,17 @@ class Home extends React.Component {
   onEditorClick(event) {
     this.editor.focus();
   }
+
+  onTitleChange = event => {
+    const value = event.target.value;
+    if (value.length > 50) return;
+    const resize = () => {
+      this.title.style.height = 'auto';
+      this.title.style.height = this.title.scrollHeight + 'px';
+    };
+    window.setTimeout(resize, 0);
+    this.titleValue = value;
+  };
 
   getSelectedBlockElement() {
     // Finds the block parent of the current selection
@@ -223,7 +240,7 @@ class Home extends React.Component {
   };
 
   render() {
-    const { editorState, readOnly } = this.state;
+    const { editorState, readOnly, showTitle } = this.state;
 
     // If the user changes block type before entering any text, we can
     // either style the placeholder or hide it. Let's just hide it now.
@@ -242,6 +259,19 @@ class Home extends React.Component {
 
     return (
       <div className={editorStyles.RichEditorRoot}>
+        {showTitle && (
+          <div className={editorStyles.TitleWrapper}>
+            <textarea
+              ref={ref => (this.title = ref)}
+              rows={1}
+              maxLength={50}
+              placeholder={this.state.titlePlacehodler || '标题'}
+              defaultValue={this.state.titleValue}
+              className={editorStyles.Textarea}
+              onChange={this.onTitleChange}
+            />
+          </div>
+        )}
         <div className={className} onClick={this.onEditorClick.bind(this)}>
           <Editor
             blockStyleFn={getBlockStyle}
@@ -250,7 +280,7 @@ class Home extends React.Component {
             onChange={this.onChange}
             readOnly={readOnly}
             handleKeyCommand={this.handleKeyCommand}
-            placeholder={this.props.placehodler || '写点什么...'}
+            placeholder={this.state.placehodler || '写点什么...'}
             ref={element => {
               this.editor = element;
             }}
