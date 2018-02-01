@@ -25,7 +25,7 @@ body {
 
 .RichEditorRoot {
   background: #fff;
-  font-size: 12px;
+  font-size: 14px;
   position: relative;
 }
 
@@ -65,10 +65,28 @@ body {
 .RichEditorBlockquote {
   border-left: 5px solid #eee;
   color: #666;
-  font-family: 'Hoefler Text', 'Georgia', serif;
   font-style: italic;
+  line-height: 24px;
   margin: 16px 0;
   padding: 10px 20px;
+}
+
+.RichEditorTextLeft  :global .public-DraftStyleDefault-ltr {
+  text-align: left
+}
+
+.RichEditorTextRight :global .public-DraftStyleDefault-ltr {
+  text-align: right
+}
+
+.RichEditorTextCenter{
+  line-height: 24px;
+  min-height: 24px;
+  margin-bottom: 15px;
+}
+
+.RichEditorTextCenter :global .public-DraftStyleDefault-ltr {
+  text-align: center
 }
 
 .RichEditorImage {

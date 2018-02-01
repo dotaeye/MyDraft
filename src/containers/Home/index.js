@@ -8,8 +8,10 @@ import {
   convertToRaw,
   convertFromRaw,
   Entity,
-  Editor
+  Editor,
+  DefaultDraftBlockRenderMap
 } from 'draft-js';
+import Immutable from 'immutable';
 import Style from 'fbjs/lib/Style';
 import getElementPosition from 'fbjs/lib/getElementPosition';
 import getScrollPosition from 'fbjs/lib/getScrollPosition';
@@ -25,12 +27,29 @@ function getBlockStyle(block) {
       return editorStyles.RichEditorBlockquote;
     case 'atomic':
       return editorStyles.RichEditorImage;
+    case 'text-align-left':
+      return editorStyles.RichEditorTextLeft;
+    case 'text-align-center':
+      return editorStyles.RichEditorTextCenter;
+    case 'text-align-right':
+      return editorStyles.RichEditorTextRight;
     case 'unstyled':
       return editorStyles.RichEditorUnStyle;
     default:
       return null;
   }
 }
+const blockRenderMap = Immutable.Map({
+  'text-align-left': {
+    element: 'div'
+  },
+  'text-align-right': {
+    element: 'div'
+  },
+  'text-align-center': {
+    element: 'div'
+  }
+});
 
 class Home extends React.Component {
   state = {
@@ -38,8 +57,8 @@ class Home extends React.Component {
     readOnly: false,
     showTitle: window.showTitle,
     titleValue: window.titleValue,
-    placehodler: window.contentPlacehodler,
-    titlePlacehodler: window.titlePlacehodler
+    placeholder: window.contentPlaceholder,
+    titlePlaceholder: window.titlePlaceholder
   };
 
   componentDidMount() {
@@ -242,6 +261,9 @@ class Home extends React.Component {
   render() {
     const { editorState, readOnly, showTitle } = this.state;
 
+    const extendedBlockRenderMap = DefaultDraftBlockRenderMap.merge(
+      blockRenderMap
+    );
     // If the user changes block type before entering any text, we can
     // either style the placeholder or hide it. Let's just hide it now.
     let className = editorStyles.RichEditor;
@@ -265,7 +287,7 @@ class Home extends React.Component {
               ref={ref => (this.title = ref)}
               rows={1}
               maxLength={50}
-              placeholder={this.state.titlePlacehodler || '标题'}
+              placeholder={this.state.titlePlaceholder || '标题'}
               defaultValue={this.state.titleValue}
               className={editorStyles.Textarea}
               onChange={this.onTitleChange}
@@ -275,12 +297,13 @@ class Home extends React.Component {
         <div className={className} onClick={this.onEditorClick.bind(this)}>
           <Editor
             blockStyleFn={getBlockStyle}
+            blockRenderMap={extendedBlockRenderMap}
             blockRendererFn={this.mediaBlockRenderer}
             editorState={editorState}
             onChange={this.onChange}
             readOnly={readOnly}
             handleKeyCommand={this.handleKeyCommand}
-            placeholder={this.state.placehodler || '写点什么...'}
+            placeholder={this.state.placeholder || '写点什么...'}
             ref={element => {
               this.editor = element;
             }}
