@@ -1,6 +1,6 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import uuidv4 from 'uuid/v4';
+import React from "react";
+import ReactDOM from "react-dom";
+import uuidv4 from "uuid/v4";
 import {
   EditorState,
   RichUtils,
@@ -10,44 +10,44 @@ import {
   Entity,
   Editor,
   DefaultDraftBlockRenderMap
-} from 'draft-js';
-import Immutable from 'immutable';
-import Style from 'fbjs/lib/Style';
-import getElementPosition from 'fbjs/lib/getElementPosition';
-import getScrollPosition from 'fbjs/lib/getScrollPosition';
-import 'draft-js/dist/Draft.css';
-import { getParams } from '../../utils';
-import insertDataBlock from '../../utils/insertDataBlock';
-import Media from '../../components/Media';
-import editorStyles from './home.less';
+} from "draft-js";
+import Immutable from "immutable";
+import Style from "fbjs/lib/Style";
+import getElementPosition from "fbjs/lib/getElementPosition";
+import getScrollPosition from "fbjs/lib/getScrollPosition";
+import "draft-js/dist/Draft.css";
+import { getParams } from "../../utils";
+import insertDataBlock from "../../utils/insertDataBlock";
+import Media from "../../components/Media";
+import editorStyles from "./home.less";
 
 function getBlockStyle(block) {
   switch (block.getType()) {
-    case 'blockquote':
+    case "blockquote":
       return editorStyles.RichEditorBlockquote;
-    case 'atomic':
+    case "atomic":
       return editorStyles.RichEditorImage;
-    case 'text-align-left':
+    case "text-align-left":
       return editorStyles.RichEditorTextLeft;
-    case 'text-align-center':
+    case "text-align-center":
       return editorStyles.RichEditorTextCenter;
-    case 'text-align-right':
+    case "text-align-right":
       return editorStyles.RichEditorTextRight;
-    case 'unstyled':
+    case "unstyled":
       return editorStyles.RichEditorUnStyle;
     default:
       return null;
   }
 }
 const blockRenderMap = Immutable.Map({
-  'text-align-left': {
-    element: 'div'
+  "text-align-left": {
+    element: "div"
   },
-  'text-align-right': {
-    element: 'div'
+  "text-align-right": {
+    element: "div"
   },
-  'text-align-center': {
-    element: 'div'
+  "text-align-center": {
+    element: "div"
   }
 });
 
@@ -73,7 +73,7 @@ class Home extends React.Component {
     // const message = event.data;
     const action = JSON.parse(message);
     // 文档编辑命令
-    if (action.type === 'DOCUMENT_COMMAND') {
+    if (action.type === "DOCUMENT_COMMAND") {
       if (action.block) {
         this.onChange(
           RichUtils.toggleBlockType(this.state.editorState, action.command)
@@ -84,16 +84,24 @@ class Home extends React.Component {
         );
       }
       // 初始化
-    } else if (action.type === 'INSERT_IMAGE') {
+    } else if (action.type === "INSERT_IMAGE") {
       this.onAddImage(action.data);
-    } else if (action.type === 'GET_CONTENT') {
+    } else if (action.type === "GET_CONTENT") {
       this.postMessage({
-        type: 'GET_CONTENT',
+        type: "GET_CONTENT",
         value: this.getValue()
       });
-    } else if (action.type === 'INITIAL_EDITOR') {
+    } else if (action.type === "GET_VALUE") {
+      this.postMessage({
+        type: "GET_VALUE",
+        value: this.getValue()
+      });
+    } else if (action.type === "INITIAL_EDITOR") {
       this.onInitFromJson(action.data);
-    } else if (action.type === 'HIDE_KEYBOARD') {
+    } else if (action.type === "HIDE_KEYBOARD") {
+      if (this.title) {
+        this.title.blur();
+      }
       this.editor.blur();
     }
   }
@@ -109,11 +117,11 @@ class Home extends React.Component {
     const message = {
       block: blockType,
       style: currentStyle,
-      type: 'SET_TOOLBAR_STATE'
+      type: "SET_TOOLBAR_STATE"
     };
     this.postMessage(message);
     this.postMessage({
-      type: selection.getHasFocus() ? 'SHOW_TOOLBAR' : 'HIDE_TOOLBAR'
+      type: selection.getHasFocus() ? "SHOW_TOOLBAR" : "HIDE_TOOLBAR"
     });
 
     this.setState(
@@ -131,7 +139,7 @@ class Home extends React.Component {
   onAddImage = src => {
     const data = {
       src,
-      type: 'image'
+      type: "image"
     };
     this.onChange(insertDataBlock(this.state.editorState, data));
   };
@@ -149,7 +157,7 @@ class Home extends React.Component {
     const result = {
       imagesList: []
     };
-    rowContentState.blocks.filter(x => x.type === 'atomic').forEach(b => {
+    rowContentState.blocks.filter(x => x.type === "atomic").forEach(b => {
       const id = uuidv4();
       result.imagesList.push({
         id,
@@ -190,8 +198,8 @@ class Home extends React.Component {
     const value = event.target.value;
     if (value.length > 50) return;
     const resize = () => {
-      this.title.style.height = 'auto';
-      this.title.style.height = this.title.scrollHeight + 'px';
+      this.title.style.height = "auto";
+      this.title.style.height = this.title.scrollHeight + "px";
     };
     window.setTimeout(resize, 0);
     this.titleValue = value;
@@ -206,7 +214,7 @@ class Home extends React.Component {
     }
     let node = selection.getRangeAt(0).startContainer;
     do {
-      if (node.getAttribute && node.getAttribute('data-block') == 'true') {
+      if (node.getAttribute && node.getAttribute("data-block") == "true") {
         return node;
       }
       node = node.parentNode;
@@ -244,7 +252,7 @@ class Home extends React.Component {
   };
 
   mediaBlockRenderer = block => {
-    if (block.getType() !== 'atomic') {
+    if (block.getType() !== "atomic") {
       return null;
     }
     return {
@@ -273,7 +281,7 @@ class Home extends React.Component {
         contentState
           .getBlockMap()
           .first()
-          .getType() !== 'unstyled'
+          .getType() !== "unstyled"
       ) {
         className += ` ${editorStyles.RichEditorHidePlaceholder}`;
       }
@@ -287,7 +295,7 @@ class Home extends React.Component {
               ref={ref => (this.title = ref)}
               rows={1}
               maxLength={50}
-              placeholder={this.state.titlePlaceholder || '标题'}
+              placeholder={this.state.titlePlaceholder || "标题"}
               defaultValue={this.state.titleValue}
               className={editorStyles.Textarea}
               onChange={this.onTitleChange}
@@ -296,6 +304,7 @@ class Home extends React.Component {
         )}
         <div className={className} onClick={this.onEditorClick.bind(this)}>
           <Editor
+            stripPastedStyles
             blockStyleFn={getBlockStyle}
             blockRenderMap={extendedBlockRenderMap}
             blockRendererFn={this.mediaBlockRenderer}
@@ -303,7 +312,7 @@ class Home extends React.Component {
             onChange={this.onChange}
             readOnly={readOnly}
             handleKeyCommand={this.handleKeyCommand}
-            placeholder={this.state.placeholder || '写点什么...'}
+            placeholder={this.state.placeholder || "写点什么..."}
             ref={element => {
               this.editor = element;
             }}
