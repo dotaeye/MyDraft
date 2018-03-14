@@ -25,6 +25,9 @@ function getBlockStyle(block) {
   switch (block.getType()) {
     case "blockquote":
       return editorStyles.RichEditorBlockquote;
+    case "unordered-list-item":
+    case "ordered-list-item":
+      return editorStyles.RichEditorListItem;
     case "atomic":
       return editorStyles.RichEditorImage;
     case "text-align-left":
@@ -55,7 +58,7 @@ class Home extends React.Component {
   state = {
     editorState: EditorState.createEmpty(),
     readOnly: false,
-    showTitle: window.showTitle,
+    showTitle: true,
     titleValue: window.titleValue,
     placeholder: window.contentPlaceholder,
     titlePlaceholder: window.titlePlaceholder
@@ -205,6 +208,14 @@ class Home extends React.Component {
     this.titleValue = value;
   };
 
+  onTitleKeyDown = event => {
+    if (event.keyCode === 13) {
+      event.preventDefault();
+      this.title.blur();
+      this.editor.focus();
+    }
+  };
+
   getSelectedBlockElement() {
     // Finds the block parent of the current selection
     // https://github.com/facebook/draft-js/issues/45
@@ -298,6 +309,7 @@ class Home extends React.Component {
               placeholder={this.state.titlePlaceholder || "标题"}
               defaultValue={this.state.titleValue}
               className={editorStyles.Textarea}
+              onKeyDown={this.onTitleKeyDown}
               onChange={this.onTitleChange}
             />
           </div>
