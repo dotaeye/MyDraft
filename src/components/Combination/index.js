@@ -1,16 +1,19 @@
-import Immutable from "immutable";
-
 import {
-  genKey,
+  Modifier,
+  BlockMapBuilder,
   EditorState,
   ContentBlock,
-  Modifier,
-  BlockMapBuilder
+  genKey
 } from "draft-js";
+
+import Immutable from "immutable";
 
 const { List, Map } = Immutable;
 
-function insertDataBlock(editorState, data, blockType = "atomic") {
+import config from "./config";
+import createCombination from "./createCombination";
+
+function insertCombination(editorState) {
   const contentState = editorState.getCurrentContent();
   const selectionState = editorState.getSelection();
 
@@ -19,39 +22,24 @@ function insertDataBlock(editorState, data, blockType = "atomic") {
     selectionState,
     "backward"
   );
-
   const targetSelection = afterRemoval.getSelectionAfter();
   const afterSplit = Modifier.splitBlock(afterRemoval, targetSelection);
   const insertionTarget = afterSplit.getSelectionAfter();
 
-  const asAtomicBlock = Modifier.setBlockType(
-    afterSplit,
-    insertionTarget,
-    blockType
-  );
+  const tableBlock = createCombination(config).toArray();
 
-  const block = new ContentBlock({
-    key: genKey(),
-    type: blockType,
-    text: "",
-    characterList: List(),
-    data: new Map(data)
-  });
+  // const fragmentArray = tableBlock.push(
+  //   new ContentBlock({
+  //     key: genKey(),
+  //     type: "unstyled",
+  //     text: "",
+  //     characterList: List()
+  //   })
+  // );
 
-  const fragmentArray = [
-    block,
-    new ContentBlock({
-      key: genKey(),
-      type: "unstyled",
-      text: "",
-      characterList: List()
-    })
-  ];
-
-  const fragment = BlockMapBuilder.createFromArray(fragmentArray);
-
+  const fragment = BlockMapBuilder.createFromArray(tableBlock);
   const withAtomicBlock = Modifier.replaceWithFragment(
-    asAtomicBlock,
+    afterSplit,
     insertionTarget,
     fragment
   );
@@ -63,5 +51,4 @@ function insertDataBlock(editorState, data, blockType = "atomic") {
 
   return EditorState.push(editorState, newContent, "insert-fragment");
 }
-
-export default insertDataBlock;
+module.exports = insertCombination;

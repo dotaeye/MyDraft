@@ -18,7 +18,10 @@ import getScrollPosition from "fbjs/lib/getScrollPosition";
 import "draft-js/dist/Draft.css";
 import { getParams } from "../../utils";
 import insertDataBlock from "../../utils/insertDataBlock";
+import insertCombination from "../../components/Combination";
 import Media from "../../components/Media";
+import Smart from "../../components/Smart";
+import ImageComponnet from "../../components/Smart/ImageComponent";
 import editorStyles from "./home.less";
 
 function getBlockStyle(block) {
@@ -38,6 +41,13 @@ function getBlockStyle(block) {
       return editorStyles.RichEditorTextRight;
     case "unstyled":
       return editorStyles.RichEditorUnStyle;
+
+    case "combination":
+      return "combination";
+    case "combination_colum":
+      return "combination_colum";
+    case "combination_text":
+      return "combination_text";
     default:
       return null;
   }
@@ -50,6 +60,15 @@ const blockRenderMap = Immutable.Map({
     element: "div"
   },
   "text-align-center": {
+    element: "div"
+  },
+  combination: {
+    element: "div"
+  },
+  combination_column: {
+    element: "div"
+  },
+  combination_text: {
     element: "div"
   }
 });
@@ -147,6 +166,22 @@ class Home extends React.Component {
     this.onChange(insertDataBlock(this.state.editorState, data));
   };
 
+  onAddSmart = () => {
+    this.onChange(
+      insertDataBlock(
+        this.state.editorState,
+        {
+          component1: "hello"
+        },
+        "smart"
+      )
+    );
+  };
+
+  onAddCombination = () => {
+    this.onChange(insertCombination(this.state.editorState));
+  };
+
   getContent = () => {
     return this.state.editorState.getCurrentContent();
   };
@@ -216,6 +251,11 @@ class Home extends React.Component {
     }
   };
 
+  onConsoleContent = () => {
+    const value = this.getValue();
+    console.log(value);
+  };
+
   getSelectedBlockElement() {
     // Finds the block parent of the current selection
     // https://github.com/facebook/draft-js/issues/45
@@ -263,11 +303,22 @@ class Home extends React.Component {
   };
 
   mediaBlockRenderer = block => {
-    if (block.getType() !== "atomic") {
+    const blockType = block.getType();
+    const allowBlocks = ["atomic", "smart", "combination_image"];
+
+    if (!allowBlocks.includes(blockType)) {
       return null;
     }
+
+    const blockComponnet =
+      blockType === "atomic"
+        ? Media
+        : blockType === "combination_image"
+          ? ImageComponnet
+          : Smart;
+
     return {
-      component: Media,
+      component: blockComponnet,
       editable: false,
       props: {
         onChange: this.onChange,
@@ -300,6 +351,9 @@ class Home extends React.Component {
 
     return (
       <div className={editorStyles.RichEditorRoot}>
+        <button onClick={this.onAddSmart}>添加smart组件</button>
+        <button onClick={this.onAddCombination}>添加组合</button>
+        <button onClick={this.onConsoleContent}>获取文本JSON</button>
         {showTitle && (
           <div className={editorStyles.TitleWrapper}>
             <textarea
